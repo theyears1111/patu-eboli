@@ -1,76 +1,48 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import FilterPills from '../components/FilterPills';
 import ScrollReveal from '../components/ScrollReveal';
-import { drinks, drinkCategories, DrinkCategory } from '../data/drinks';
+import { useFirestore } from '../hooks/useFirestore';
+import { drinks as fallbackDrinks, drinkCategories, DrinkCategory } from '../data/drinks';
 import PageHeader from '../components/PageHeader';
+
+const DEFAULT_IMAGE = 'https://images.pexels.com/photos/3407777/pexels-photo-3407777.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&dpr=1';
+interface Drink { name:string; description:string; price:string; category:string; badge?:string; }
+interface DrinksData { items: Drink[]; }
 
 export default function DrinkList() {
   const [active, setActive] = useState<DrinkCategory>('spritz');
+  const { data: heroData } = useFirestore<any>('hero_immagini', {});
+  const { data: drinksData } = useFirestore<DrinksData>('drinks', { items:[] });
 
-  const filtered = drinks.filter((d) => d.category === active);
+  const getItems = (cat: DrinkCategory) => {
+    const fb = (drinksData.items||[]).filter((d:any) => d.category === cat);
+    if (fb.length > 0) return fb;
+    return fallbackDrinks.filter(d => d.category === cat);
+  };
 
   return (
     <div className="pt-16 min-h-screen bg-white">
-      <PageHeader
-        title="Drink List"
-        subtitle="Aperitivi, cocktail classici e gin tonic selezionati. Ogni drink è preparato con cura da chi ama il proprio mestiere."
-        image="https://images.pexels.com/photos/3407777/pexels-photo-3407777.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&dpr=1"
-      />
-
+      <PageHeader title="Drink List"
+        subtitle="Aperitivi, cocktail classici e gin tonic selezionati. Ogni drink è preparato con cura."
+        image={heroData?.drink_list || DEFAULT_IMAGE} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-sm py-4 -mx-4 px-4 border-b border-gray-100 mb-10">
-          <FilterPills
-            categories={drinkCategories}
-            active={active}
-            onChange={(id) => setActive(id as DrinkCategory)}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map((drink, i) => (
-            <ScrollReveal key={drink.id} delay={i * 70}>
-              <div className="group bg-white border border-gray-100 rounded-card p-5 hover:border-olive-200 hover:shadow-md transition-all duration-300">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h3 className="text-base font-semibold text-charcoal group-hover:text-olive-600 transition-colors">
-                        {drink.name}
-                      </h3>
-                      {drink.badge && (
-                        <span className={`px-2.5 py-0.5 rounded-pill text-xs font-medium ${
-                          drink.badge === 'Analcolico'
-                            ? 'bg-green-50 text-green-600'
-                            : 'bg-terracotta-100 text-terracotta-600'
-                        }`}>
-                          {drink.badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500 leading-relaxed">{drink.description}</p>
+        <FilterPills categories={drinkCategories} active={active} onChange={(v)=>setActive(v as DrinkCategory)} />
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {getItems(active).map((drink:any, i:number) => (
+            <ScrollReveal key={i} delay={i*50}>
+              <div className="group bg-white border border-gray-100 rounded-card p-5 hover:border-olive-200 hover:shadow-sm transition-all duration-200">
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-charcoal group-hover:text-olive-600 transition-colors">{drink.name}</h3>
+                    {drink.badge && <span className="text-xs px-2 py-0.5 rounded-full bg-olive-100 text-olive-700 font-medium">{drink.badge}</span>}
                   </div>
-                  <span className="text-base font-bold text-olive-500 whitespace-nowrap">{drink.price}</span>
+                  <span className="font-semibold text-olive-600 shrink-0">{drink.price}</span>
                 </div>
+                {drink.description && <p className="text-sm text-gray-500 leading-relaxed mt-1">{drink.description}</p>}
               </div>
             </ScrollReveal>
           ))}
         </div>
-
-        <ScrollReveal>
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-cream rounded-card p-5 border border-gray-100">
-              <h4 className="text-sm font-semibold text-charcoal mb-2">Analcolici</h4>
-              <p className="text-sm text-gray-500">
-                Abbiamo una selezione di drink analcolici per chi non beve alcool. Chiedi al personale per le opzioni del momento.
-              </p>
-            </div>
-            <div className="bg-cream rounded-card p-5 border border-gray-100">
-              <h4 className="text-sm font-semibold text-charcoal mb-2">Soft Drinks</h4>
-              <p className="text-sm text-gray-500">
-                Acqua naturale e frizzante, Coca-Cola, Fanta, succhi di frutta, tè freddo — chiedi al personale.
-              </p>
-            </div>
-          </div>
-        </ScrollReveal>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ const CLOUDINARY_CLOUD = 'dmybopb31';
 const CLOUDINARY_PRESET = 'bollicine_upload';
 
 const sezioni = [
+  { id:'brand', label:'Logo & Brand', icon:'🎨' },
   { id:'info', label:'Info & Orari', icon:'📋' },
   { id:'hero_immagini', label:'Foto Hero Pagine', icon:'🖼️' },
   { id:'home', label:'Home', icon:'🏠' },
@@ -169,6 +170,7 @@ function FormEditor({ sezione, dati, onChange }: { sezione:string; dati:any; onC
     nd[arr].splice(i,1); onChange(nd);
   };
 
+  if (sezione==='brand') return <BrandForm dati={dati} update={update} />;
   if (sezione==='info') return <InfoForm dati={dati} update={update} />;
   if (sezione==='hero_immagini') return <HeroForm dati={dati} update={update} />;
   if (sezione==='home') return <HomeForm dati={dati} update={update} />;
@@ -197,6 +199,26 @@ function Field({ label, value, onChange, multiline }: { label:string; value:stri
         ? <textarea value={value||''} onChange={e=>onChange(e.target.value)} rows={3} style={{...inp, resize:'vertical'}} />
         : <input style={inp} value={value||''} onChange={e=>onChange(e.target.value)} />
       }
+    </div>
+  );
+}
+
+function BrandForm({ dati, update }: any) {
+  return (
+    <div style={mxw}>
+      <div style={crd}>
+        <p style={stl}>Logo del ristorante</p>
+        <div style={{ background:'#f0f4e8', border:'1px solid #6B7F4A', borderRadius:'8px', padding:'12px', marginBottom:'16px' }}>
+          <p style={{ color:'#6B7F4A', fontSize:'12px', margin:0 }}>Carica il logo ufficiale del locale. Apparirà nella navbar e nel footer al posto del testo.</p>
+        </div>
+        <ImageUpload label="Logo (PNG o SVG con sfondo trasparente)" value={dati?.logo_url||''} onChange={v=>update('logo_url',v)} />
+        {dati?.logo_url && (
+          <div style={{ background:'#f9f9f9', borderRadius:'8px', padding:'16px', textAlign:'center', marginTop:'8px' }}>
+            <p style={{ color:'#9ca3af', fontSize:'11px', marginBottom:'8px' }}>Anteprima su sfondo chiaro</p>
+            <img src={dati.logo_url} alt="Logo" style={{ height:'40px', objectFit:'contain' }} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -381,6 +403,7 @@ function RecensioniForm({ dati, updateItem, addItem, removeItem }: any) {
 }
 
 function getDefault(sezione: string) {
+  if (sezione==='brand') return { logo_url:'' };
   if (sezione==='info') return {nome:'Patù',telefono:'331 804 3454',email:'',indirizzo:'Via Enrico Perito, 38, 84025 Eboli (SA)',facebook:'https://www.facebook.com/PatuEboli/',instagram:'https://www.instagram.com/patu_eboli/',thefork:'https://www.thefork.it/ristorante/patu-pane-tulipani-r810703',tripadvisor:'https://www.tripadvisor.it/Restaurant_Review-g1396311-d26828442-Reviews-Patu_Pane_Tulipani-Eboli_Province_of_Salerno_Campania.html',maps_url:'https://maps.google.com/?q=Patù+Pane+Tulipani+Eboli',orari:{lunedi:'18:00 - 01:00',martedi:'Chiuso',mercoledi:'Chiuso',giovedi:'18:00 - 01:00',venerdi:'18:00 - 01:00',sabato:'18:00 - 01:00',domenica:'18:00 - 01:00'}};
   if (sezione==='hero_immagini') return {home:'',menu:'',birre:'',drink_list:'',vini:'',galleria:'',contatti:'',allergeni:''};
   if (sezione==='home') return {titolo:'',sottotitolo:'',storia:''};

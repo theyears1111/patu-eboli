@@ -18,12 +18,12 @@ const db = getFirestore(app);
 
 async function seed() {
   await setDoc(doc(db, 'ristoranti', 'bollicine', 'admin', 'accesso'), {
-    utenti: ['luigi@bollicine.it']
+    utenti: ['bollicine.champagneria@gmail.com']
   });
   console.log('✓ Bollicine');
 
   await setDoc(doc(db, 'ristoranti', 'patu', 'admin', 'accesso'), {
-    utenti: ['admin@patu.it']
+    utenti: ['iosperiamochemelacavosrls@gmail.com']
   });
   console.log('✓ Patù');
 

@@ -1,95 +1,62 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import FilterPills from '../components/FilterPills';
 import ScrollReveal from '../components/ScrollReveal';
-import { vini, wineTypes, WineType } from '../data/vini';
+import { useFirestore } from '../hooks/useFirestore';
+import { vini as fallbackVini, wineTypes, WineType } from '../data/vini';
 import PageHeader from '../components/PageHeader';
 
-const wineColors: Record<WineType, string> = {
-  bianco: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  rosso: 'bg-red-50 text-red-700 border-red-200',
-  rosato: 'bg-pink-50 text-pink-600 border-pink-200',
-};
+const DEFAULT_IMAGE = 'https://images.pexels.com/photos/1407846/pexels-photo-1407846.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&dpr=1';
+interface Wine { name:string; producer:string; region:string; price:string; description?:string; badge?:string; }
+interface ViniData { bianchi:Wine[]; rossi:Wine[]; rosati:Wine[]; calice:Wine[]; }
 
 export default function CartaVini() {
   const [active, setActive] = useState<WineType>('bianco');
+  const { data: heroData } = useFirestore<any>('hero_immagini', {});
+  const { data: viniData } = useFirestore<ViniData>('vini', { bianchi:[], rossi:[], rosati:[], calice:[] });
 
-  const filtered = vini.filter((v) => v.type === active);
+  const typeToKey: Record<WineType, keyof ViniData> = {
+    bianco:'bianchi', rosso:'rossi', rosato:'rosati', calice:'calice'
+  };
+
+  const getFbVini = (type: WineType): Wine[] => viniData[typeToKey[type]] || [];
+  const getFallback = (type: WineType) => fallbackVini.filter(v => v.type === type);
+  const getVini = (type: WineType) => {
+    const fb = getFbVini(type);
+    return fb.length > 0 ? fb : getFallback(type);
+  };
+
+  const filtered = getVini(active);
+  const allTypes = [...wineTypes, { id: 'calice' as WineType, label: 'Vini al Calice' }];
 
   return (
     <div className="pt-16 min-h-screen bg-white">
-      <PageHeader
-        title="Carta dei Vini"
-        subtitle="Vini campani e non, selezionati con cura per esaltare ogni piatto. Dalla Falanghina all'Aglianico, un viaggio tra i vigneti d'Italia."
-        image="https://images.pexels.com/photos/2253643/pexels-photo-2253643.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&dpr=1"
-      />
-
+      <PageHeader title="Carta dei Vini"
+        subtitle="Vini campani e non, selezionati con cura per esaltare ogni piatto."
+        image={heroData?.vini || DEFAULT_IMAGE} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-sm py-4 -mx-4 px-4 border-b border-gray-100 mb-10">
-          <FilterPills
-            categories={wineTypes}
-            active={active}
-            onChange={(id) => setActive(id as WineType)}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4">
-          {filtered.map((wine, i) => (
-            <ScrollReveal key={wine.id} delay={i * 60}>
-              <div className="group bg-white border border-gray-100 rounded-card p-6 hover:border-olive-200 hover:shadow-md transition-all duration-300">
-                <div className="flex items-start justify-between gap-4">
+        <FilterPills categories={allTypes} active={active} onChange={(v)=>setActive(v as WineType)} />
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map((wine:any, i:number) => (
+            <ScrollReveal key={i} delay={i*60}>
+              <div className="group bg-white border border-gray-100 rounded-card p-5 hover:border-olive-200 hover:shadow-sm transition-all duration-200">
+                <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <h3 className="text-base font-bold text-charcoal group-hover:text-olive-600 transition-colors">
-                        {wine.name}
-                      </h3>
-                      {wine.badge && (
-                        <span className="px-2.5 py-0.5 rounded-pill text-xs font-medium bg-terracotta-100 text-terracotta-600">
-                          {wine.badge}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-charcoal group-hover:text-olive-600 transition-colors">{wine.name}</h3>
+                      {wine.badge && <span className="text-xs px-2 py-0.5 rounded-full bg-olive-100 text-olive-700 font-medium">{wine.badge}</span>}
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2 mb-3 text-sm text-gray-400">
-                      <span>{wine.producer}</span>
-                      <span>·</span>
-                      <span>{wine.region}</span>
-                      {wine.year && (
-                        <>
-                          <span>·</span>
-                          <span>{wine.year}</span>
-                        </>
-                      )}
-                    </div>
-
-                    <p className="text-sm text-gray-500 leading-relaxed mb-3">{wine.description}</p>
-
-                    {wine.grapes && (
-                      <span className={`inline-flex px-3 py-1 rounded-pill text-xs font-medium border ${wineColors[wine.type]}`}>
-                        {wine.grapes}
-                      </span>
-                    )}
+                    <p className="text-xs text-gray-400 mt-0.5">{[wine.producer, wine.region].filter(Boolean).join(' · ')}</p>
                   </div>
-
-                  <div className="text-right shrink-0">
-                    <p className="text-base font-bold text-olive-500">{wine.price}</p>
-                    {wine.priceBottle && (
-                      <p className="text-sm text-gray-400 mt-0.5">{wine.priceBottle} bottiglia</p>
-                    )}
-                  </div>
+                  <span className="font-semibold text-olive-600 shrink-0">{wine.price}</span>
                 </div>
+                {wine.description && <p className="text-sm text-gray-500 mt-2 leading-relaxed">{wine.description}</p>}
               </div>
             </ScrollReveal>
           ))}
         </div>
-
-        <ScrollReveal>
-          <div className="mt-12 bg-cream rounded-card p-6 text-center border border-gray-100">
-            <p className="text-sm font-medium text-charcoal mb-1">Hai un\'etichetta preferita?</p>
-            <p className="text-sm text-gray-500">
-              Parliamo con te di vini. Chiedi al personale per abbinamenti e bottiglie fuori carta.
-            </p>
-          </div>
-        </ScrollReveal>
+        <div className="mt-10 p-5 bg-olive-50 rounded-card border border-olive-100 text-center">
+          <p className="text-sm text-gray-600">Hai un'etichetta preferita? Parliamo con te di vini.</p>
+        </div>
       </div>
     </div>
   );
