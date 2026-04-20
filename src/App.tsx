@@ -10,12 +10,11 @@ import CartaVini from './pages/CartaVini';
 import Galleria from './pages/Galleria';
 import Contatti from './pages/Contatti';
 import Allergeni from './pages/Allergeni';
+import Admin from './admin/Admin';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [pathname]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
   return null;
 }
 
@@ -45,7 +44,10 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppLayout />
+      <Routes>
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/*" element={<AppLayout />} />
+      </Routes>
     </BrowserRouter>
   );
 }
