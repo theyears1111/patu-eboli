@@ -1,9 +1,26 @@
-
-import { wines } from "../lib/data";
+import { useFirestore } from "../hooks/useFirestore";
+import { wines as fallbackWines } from "../lib/data";
 import { Reveal } from "../components/Reveal";
 import { Tulip } from "../components/Tulip";
 
 export default function ViniPage() {
+  const data = useFirestore('vini', { items: [] });
+
+  // Da Firebase: array flat con campo categoria
+  // Fallback: oggetto { "I Bianchi": [...], "I Rossi": [...] }
+  const categories: [string, any[]][] = (() => {
+    if (data?.items?.length) {
+      const cats: Record<string, any[]> = {};
+      data.items.forEach((item: any) => {
+        const cat = item.categoria || 'Vini';
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push(item);
+      });
+      return Object.entries(cats);
+    }
+    return Object.entries(fallbackWines);
+  })();
+
   return (
     <div className="px-5 py-16 md:py-24">
       <div className="mx-auto max-w-5xl">
@@ -19,7 +36,7 @@ export default function ViniPage() {
         </Reveal>
 
         <div className="space-y-12">
-          {Object.entries(wines).map(([cat, items]) => (
+          {categories.map(([cat, items]) => (
             <section key={cat}>
               <Reveal>
                 <div className="flex items-center gap-4 mb-6">
@@ -27,27 +44,23 @@ export default function ViniPage() {
                   <div className="flex-1 h-px bg-gradient-to-r from-primary/40 to-transparent" />
                 </div>
               </Reveal>
-
               <div className="bg-card rounded-3xl shadow-[var(--shadow-soft)] divide-y divide-dashed divide-border">
-                {items.map((w, i) => {
-                  const wine = w as { name: string; winery?: string; year?: string; price: string };
-                  return (
-                    <Reveal key={wine.name} delay={i * 50}>
-                      <div className="flex justify-between items-baseline gap-4 p-5">
-                        <div>
-                          <h3 className="font-display text-lg font-semibold">{wine.name}</h3>
-                          {wine.winery && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="handwritten text-base text-primary">{wine.winery}</span>
-                              {wine.year && <span> · {wine.year}</span>}
-                            </p>
-                          )}
-                        </div>
-                        <span className="font-display text-lg font-bold text-accent whitespace-nowrap">€ {wine.price}</span>
+                {items.map((w: any, i: number) => (
+                  <Reveal key={w.name} delay={i * 50}>
+                    <div className="flex justify-between items-baseline gap-4 p-5">
+                      <div>
+                        <h3 className="font-display text-lg font-semibold">{w.name}</h3>
+                        {(w.winery || w.producer) && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="handwritten text-base text-primary">{w.winery || w.producer}</span>
+                            {(w.year || w.region) && <span> · {w.year || w.region}</span>}
+                          </p>
+                        )}
                       </div>
-                    </Reveal>
-                  );
-                })}
+                      <span className="font-display text-lg font-bold text-accent whitespace-nowrap">€ {w.price}</span>
+                    </div>
+                  </Reveal>
+                ))}
               </div>
             </section>
           ))}

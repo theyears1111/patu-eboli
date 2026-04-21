@@ -10,7 +10,7 @@ const CLOUDINARY_PRESET = 'bollicine_upload';
 const sezioni = [
   { id:'brand', label:'Logo & Brand', icon:'🎨' },
   { id:'info', label:'Info & Orari', icon:'📋' },
-  { id:'hero_immagini', label:'Foto Hero Pagine', icon:'🖼️' },
+
   { id:'home', label:'Home', icon:'🏠' },
   { id:'menu_antipasti', label:'Antipasti', icon:'🍽️' },
   { id:'menu_primi', label:'Primi', icon:'🍝' },
@@ -172,7 +172,7 @@ function FormEditor({ sezione, dati, onChange }: { sezione:string; dati:any; onC
 
   if (sezione==='brand') return <BrandForm dati={dati} update={update} />;
   if (sezione==='info') return <InfoForm dati={dati} update={update} />;
-  if (sezione==='hero_immagini') return <HeroForm dati={dati} update={update} />;
+
   if (sezione==='home') return <HomeForm dati={dati} update={update} />;
   if (sezione.startsWith('menu_')) return <MenuForm dati={dati} updateItem={updateItem} addItem={addItem} removeItem={removeItem} />;
   if (sezione==='birre') return <BirreForm dati={dati} updateItem={updateItem} addItem={addItem} removeItem={removeItem} />;
@@ -281,7 +281,30 @@ function HomeForm({ dati, update }: any) {
         <p style={stl}>Testi principali</p>
         <Field label="Titolo hero (es. Pane fresco, tulipani e buona cucina)" value={dati?.titolo} onChange={v=>update('titolo',v)} />
         <Field label="Sottotitolo hero" value={dati?.sottotitolo} onChange={v=>update('sottotitolo',v)} multiline />
-        <Field label="Testo sezione 'La nostra storia'" value={dati?.storia} onChange={v=>update('storia',v)} multiline />
+        <Field label="Testo sezione pane (storia)" value={dati?.storia} onChange={v=>update('storia',v)} multiline />
+        <Field label="Testo CTA (box prenota in fondo)" value={dati?.testo_cta} onChange={v=>update('testo_cta',v)} multiline />
+      </div>
+      <div style={crd}>
+        <p style={stl}>Citazione chef</p>
+        <Field label="Nome chef" value={dati?.nome_chef} onChange={v=>update('nome_chef',v)} />
+        <Field label="Citazione" value={dati?.citazione_chef} onChange={v=>update('citazione_chef',v)} />
+      </div>
+      <div style={crd}>
+        <p style={stl}>Foto sezione pane</p>
+        <ImageUpload label="Foto pane (grande, a sinistra)" value={dati?.foto_pane||''} onChange={v=>update('foto_pane',v)} />
+        <ImageUpload label="Foto chef (tonda, sotto il testo)" value={dati?.foto_chef||''} onChange={v=>update('foto_chef',v)} />
+        <ImageUpload label="Foto giardino (sezione grande)" value={dati?.foto_giardino||''} onChange={v=>update('foto_giardino',v)} />
+      </div>
+      <div style={crd}>
+        <p style={stl}>Statistiche (contatori animati)</p>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+          <Field label="Numero 1 (es. 181)" value={dati?.stat1_num} onChange={v=>update('stat1_num',v)} />
+          <Field label="Label 1 (es. recensioni Google)" value={dati?.stat1_label} onChange={v=>update('stat1_label',v)} />
+          <Field label="Numero 2 (es. 13)" value={dati?.stat2_num} onChange={v=>update('stat2_num',v)} />
+          <Field label="Label 2 (es. birre artigianali)" value={dati?.stat2_label} onChange={v=>update('stat2_label',v)} />
+          <Field label="Numero 3 (es. 46 = 4.6)" value={dati?.stat3_num} onChange={v=>update('stat3_num',v)} />
+          <Field label="Label 3 (es. valutazione media)" value={dati?.stat3_label} onChange={v=>update('stat3_label',v)} />
+        </div>
       </div>
     </div>
   );
@@ -403,10 +426,10 @@ function RecensioniForm({ dati, updateItem, addItem, removeItem }: any) {
 }
 
 function getDefault(sezione: string) {
-  if (sezione==='brand') return { logo_url:'' };
+
   if (sezione==='info') return {nome:'Patù',telefono:'331 804 3454',email:'',indirizzo:'Via Enrico Perito, 38, 84025 Eboli (SA)',facebook:'https://www.facebook.com/PatuEboli/',instagram:'https://www.instagram.com/patu_eboli/',thefork:'https://www.thefork.it/ristorante/patu-pane-tulipani-r810703',tripadvisor:'https://www.tripadvisor.it/Restaurant_Review-g1396311-d26828442-Reviews-Patu_Pane_Tulipani-Eboli_Province_of_Salerno_Campania.html',maps_url:'https://maps.google.com/?q=Patù+Pane+Tulipani+Eboli',orari:{lunedi:'18:00 - 01:00',martedi:'Chiuso',mercoledi:'Chiuso',giovedi:'18:00 - 01:00',venerdi:'18:00 - 01:00',sabato:'18:00 - 01:00',domenica:'18:00 - 01:00'}};
   if (sezione==='hero_immagini') return {home:'',menu:'',birre:'',drink_list:'',vini:'',galleria:'',contatti:'',allergeni:''};
-  if (sezione==='home') return {titolo:'',sottotitolo:'',storia:''};
+  if (sezione==='home') return {titolo:'',sottotitolo:'',storia:'',testo_cta:'',nome_chef:'',citazione_chef:'',foto_pane:'',foto_chef:'',foto_giardino:'',stat1_num:'181',stat1_label:'recensioni Google',stat2_num:'13',stat2_label:'birre artigianali',stat3_num:'46',stat3_label:'valutazione media'};
   if (sezione.startsWith('menu_')) return {items:[]};
   if (sezione==='birre') return {items:[]};
   if (sezione==='vini') return {bianchi:[],rossi:[],rosati:[],calice:[]};

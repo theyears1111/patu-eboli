@@ -1,13 +1,29 @@
-
 import { useState } from "react";
-import { menu } from "../lib/data";
+import { useFirestore } from "../hooks/useFirestore";
+import { menu as fallbackMenu } from "../lib/data";
 import { Reveal } from "../components/Reveal";
 import { Tulip } from "../components/Tulip";
 
 export default function MenuPage() {
+  const data = useFirestore('menu', { items: [] });
+
+  // Costruisce le sezioni da Firebase oppure usa fallback hardcoded
+  const sections: { title: string; items: any[] }[] = (() => {
+    if (data?.items?.length) {
+      const cats: Record<string, any[]> = {};
+      data.items.forEach((item: any) => {
+        const cat = item.categoria || 'Altro';
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push(item);
+      });
+      return Object.entries(cats).map(([title, items]) => ({ title, items }));
+    }
+    return fallbackMenu;
+  })();
+
   const [active, setActive] = useState<string>("Tutti");
-  const filters = ["Tutti", ...menu.map((m) => m.title)];
-  const visible = active === "Tutti" ? menu : menu.filter((m) => m.title === active);
+  const filters = ["Tutti", ...sections.map((s) => s.title)];
+  const visible = active === "Tutti" ? sections : sections.filter((s) => s.title === active);
 
   return (
     <div className="px-5 py-16 md:py-24">
@@ -23,18 +39,14 @@ export default function MenuPage() {
           </div>
         </Reveal>
 
-        {/* Filter pills */}
         <div className="flex flex-wrap gap-2 justify-center mb-12">
           {filters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setActive(f)}
+            <button key={f} onClick={() => setActive(f)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
                 active === f
                   ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
                   : "bg-card text-foreground/70 hover:bg-primary/10 border border-border"
-              }`}
-            >
+              }`}>
               {f}
             </button>
           ))}
@@ -49,9 +61,8 @@ export default function MenuPage() {
                   <div className="flex-1 h-px bg-gradient-to-r from-primary/40 to-transparent" />
                 </div>
               </Reveal>
-
               <div className="grid md:grid-cols-2 gap-5">
-                {section.items.map((item, i) => (
+                {section.items.map((item: any, i: number) => (
                   <Reveal key={item.name} delay={i * 60}>
                     <div className="bg-card rounded-3xl p-6 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-warm)] transition-all hover:-translate-y-0.5 h-full relative">
                       {item.tag && (
@@ -63,11 +74,18 @@ export default function MenuPage() {
                           {item.tag === "veg" ? "veggie" : item.tag === "signature" ? "del cuore" : item.tag}
                         </span>
                       )}
+                      {/* Foto opzionale dall'admin */}
+                      {item.foto && (
+                        <img src={item.foto} alt={item.name} loading="lazy"
+                          className="w-full h-40 object-cover rounded-2xl mb-4" />
+                      )}
                       <div className="flex justify-between items-start gap-4 mb-2">
                         <h3 className="font-display text-xl font-semibold">{item.name}</h3>
                         <span className="font-display text-xl font-bold text-accent whitespace-nowrap">€ {item.price}</span>
                       </div>
-                      {item.desc && <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>}
+                      {(item.desc || item.description) && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">{item.desc || item.description}</p>
+                      )}
                     </div>
                   </Reveal>
                 ))}

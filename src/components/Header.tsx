@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Tulip } from './Tulip';
 import { info } from '@/lib/data';
 
 const links = [
@@ -20,12 +19,12 @@ export function Header() {
   return (
     <header style={{ position:'sticky', top:0, zIndex:40, backdropFilter:'blur(12px)', backgroundColor:'rgba(249,245,238,0.85)', borderBottom:'1px solid rgba(0,0,0,0.07)' }}>
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <Link to="/" onClick={() => setOpen(false)} style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none' }}>
-          <Tulip className="h-9 w-9" />
-          <div>
-            <div style={{ fontFamily:'"Playfair Display",serif', fontSize:20, fontWeight:700, color:'#2C2C2C', lineHeight:1 }}>Patù</div>
-            <div style={{ fontFamily:'Caveat,cursive', fontSize:15, color:'#7BAF7A', marginTop:-2 }}>Pane & Tulipani</div>
-          </div>
+        <Link to="/" onClick={() => setOpen(false)} style={{ display:'flex', alignItems:'center', textDecoration:'none' }}>
+          <img
+            src="https://d3a2x5gco7pf9q.cloudfront.net/ADMIN/StyleOfficial/PaTuPaneeTulipani/Logo_512_20230511.png"
+            alt="Patù — Pane & Tulipani"
+            style={{ height:52, width:'auto', objectFit:'contain' }}
+          />
         </Link>
         <nav style={{ display:'flex', alignItems:'center', gap:4 }} className="hidden-mobile">
           {links.map(l => (

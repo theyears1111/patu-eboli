@@ -1,10 +1,25 @@
-
-import { drinks } from "../lib/data";
+import { useFirestore } from "../hooks/useFirestore";
+import { drinks as fallbackDrinks } from "../lib/data";
 import { Reveal } from "../components/Reveal";
 import { Tulip } from "../components/Tulip";
 
 export default function DrinkPage() {
-  const categories = Object.entries(drinks);
+  const data = useFirestore('drink', { items: [] });
+
+  // Da Firebase: array flat con campo categoria
+  // Fallback: oggetto { Spritz: [...], Cocktail: [...] }
+  const categories: [string, any[]][] = (() => {
+    if (data?.items?.length) {
+      const cats: Record<string, any[]> = {};
+      data.items.forEach((item: any) => {
+        const cat = item.categoria || 'Altro';
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push(item);
+      });
+      return Object.entries(cats);
+    }
+    return Object.entries(fallbackDrinks);
+  })();
 
   return (
     <div className="px-5 py-16 md:py-24">
@@ -29,13 +44,15 @@ export default function DrinkPage() {
                   <div className="flex-1 h-px bg-primary/30" />
                 </div>
                 <ul className="space-y-4">
-                  {items.map((d) => (
+                  {items.map((d: any) => (
                     <li key={d.name} className="border-b border-dashed border-border last:border-0 pb-4 last:pb-0">
                       <div className="flex justify-between items-baseline gap-3">
                         <h3 className="font-display text-lg font-semibold">{d.name}</h3>
                         <span className="font-display text-lg font-bold text-accent">€ {d.price}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{d.desc}</p>
+                      {(d.desc || d.description) && (
+                        <p className="text-sm text-muted-foreground mt-1">{d.desc || d.description}</p>
+                      )}
                     </li>
                   ))}
                 </ul>
