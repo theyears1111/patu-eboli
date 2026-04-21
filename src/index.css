@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { background-color: #F9F5EE; color: #2C2C2C; font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+}
+
+@layer utilities {
+  .font-display { font-family: 'Playfair Display', Georgia, serif; }
+  .handwritten { font-family: 'Caveat', cursive; }
+  .btn-pill { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; border-radius: 50px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; }
+  .paper { background-color: #F9F5EE; background-image: radial-gradient(rgba(180,150,100,0.12) 1px, transparent 1px), radial-gradient(rgba(180,150,100,0.09) 1px, transparent 1px); background-size: 24px 24px, 32px 32px; }
+}
+
+@keyframes fade-up { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fade-in { from { opacity:0; } to { opacity:1; } }
+@keyframes bloom { 0%{opacity:0;transform:scale(0.6) rotate(-12deg);} 60%{opacity:1;transform:scale(1.08) rotate(4deg);} 100%{opacity:1;transform:scale(1) rotate(0deg);} }
+@keyframes sway { 0%,100%{transform:rotate(-2deg);} 50%{transform:rotate(2deg);} }
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+@keyframes stemGrow { from{stroke-dashoffset:120;opacity:0;} to{stroke-dashoffset:0;opacity:1;} }
+@keyframes petalBloom { 0%,55%{opacity:0;transform:scaleY(0);} 80%{opacity:1;transform:scaleY(1.06);} 100%{opacity:1;transform:scaleY(1);} }
+@keyframes sideBloom { 0%,62%{opacity:0;transform:scaleX(0);} 85%{opacity:1;transform:scaleX(1.04);} 100%{opacity:1;transform:scaleX(1);} }
+@keyframes leafPop { 0%,40%{opacity:0;transform:scale(0);} 70%{opacity:1;transform:scale(1.1);} 100%{opacity:1;transform:scale(1);} }
+@keyframes textSlide { 0%,75%{opacity:0;transform:translateY(8px);} 100%{opacity:1;transform:translateY(0);} }
+@keyframes subSlide { 0%,85%{opacity:0;transform:translateY(6px);} 100%{opacity:0.7;transform:translateY(0);} }
+@keyframes tulipSway { 0%,100%{transform:rotate(0deg);} 30%{transform:rotate(2deg);} 70%{transform:rotate(-1.5deg);} }
+
+.wavy-divider {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'><path d='M0,20 Q150,0 300,20 T600,20 T900,20 T1200,20' stroke='%237BAF7A' stroke-width='2' fill='none' stroke-linecap='round' opacity='0.5'/><path d='M0,28 Q150,8 300,28 T600,28 T900,28 T1200,28' stroke='%23E8857A' stroke-width='1.5' fill='none' stroke-linecap='round' opacity='0.4'/></svg>");
+  background-repeat: no-repeat; background-size: 100% 100%; height: 40px;
+}
+
+.reveal { opacity:0; transform:translateY(28px); transition:opacity 0.8s ease-out, transform 0.8s ease-out; }
+.reveal.is-visible { opacity:1; transform:translateY(0); }
