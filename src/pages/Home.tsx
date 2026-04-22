@@ -4,7 +4,6 @@ import { Reveal } from "../components/Reveal";
 import { useFirestore } from "../hooks/useFirestore";
 import { info as fallbackInfo } from "../lib/data";
 import bread from "../assets/bread.jpg";
-import chef from "../assets/chef.jpg";
 import leaves from "../assets/leaves.png";
 
 function useCounter(target: number, duration = 1600, start = false) {
@@ -26,9 +25,9 @@ function useCounter(target: number, duration = 1600, start = false) {
 function StatsSection({ homeData }: { homeData: any }) {
   const ref = useRef<HTMLDivElement>(null);
   const [started, setStarted] = useState(false);
-  const reviews = useCounter(Number(homeData?.stat1_num) || 181, 1600, started);
-  const beers   = useCounter(Number(homeData?.stat2_num) || 13,  1000, started);
-  const rating  = useCounter(Number(homeData?.stat3_num) || 46,  800,  started);
+  const stat1 = useCounter(Number(homeData?.stat1_num) || 181, 1600, started);
+  const stat2 = useCounter(Number(homeData?.stat2_num) || 13, 1000, started);
+  const stat3 = useCounter(Number(homeData?.stat3_num) || 46, 800, started);
 
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setStarted(true); }, { threshold: 0.5 });
@@ -36,15 +35,17 @@ function StatsSection({ homeData }: { homeData: any }) {
     return () => obs.disconnect();
   }, []);
 
+  const stats = [
+    { value: stat1.toString(), label: homeData?.stat1_label || "recensioni Google" },
+    { value: `${stat2}+`, label: homeData?.stat2_label || "birre artigianali" },
+    { value: (stat3 / 10).toFixed(1), label: homeData?.stat3_label || "valutazione media" },
+  ];
+
   return (
     <div ref={ref} className="grid grid-cols-3 gap-4 py-10 border-y border-border/50 my-10">
-      {[
-        { display: reviews.toString(), label: homeData?.stat1_label || "recensioni Google" },
-        { display: `${beers}+`,        label: homeData?.stat2_label || "birre artigianali" },
-        { display: (rating/10).toFixed(1), label: homeData?.stat3_label || "valutazione media" },
-      ].map((s, i) => (
+      {stats.map((s, i) => (
         <div key={i} className="text-center">
-          <div className="font-display text-4xl md:text-5xl font-bold text-primary">{s.display}</div>
+          <div className="font-display text-4xl md:text-5xl font-bold text-primary">{s.value}</div>
           <div className="handwritten text-base md:text-lg text-muted-foreground mt-1">{s.label}</div>
         </div>
       ))}
@@ -90,27 +91,30 @@ function AnimatedLogo() {
   );
 }
 
+// Ottimizza URL Cloudinary — aggiunge trasformazioni solo se non già presenti
+function optimizeImg(url: string, width = 1200): string {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  if (url.includes('/upload/q_')) return url; // già ottimizzata
+  return url.replace('/upload/', `/upload/q_auto:best,f_auto,w_${width}/`);
+}
+
 export default function Home() {
-  // Firebase — con fallback ai dati hardcoded se vuoto
   const homeData = useFirestore('home', {});
   const infoData = useFirestore('info', fallbackInfo);
-  const heroData = useFirestore('hero_immagini', {});
 
-  const thefork  = infoData?.thefork  || fallbackInfo.thefork;
-  const telefono = infoData?.telefono || fallbackInfo.phone;
-  const phoneRaw = infoData?.phoneRaw || fallbackInfo.phoneRaw;
+  const thefork   = infoData?.thefork  || fallbackInfo.thefork;
+  const telefono  = infoData?.telefono || fallbackInfo.phone;
+  const phoneRaw  = infoData?.phoneRaw || fallbackInfo.phoneRaw;
 
-  const titolo      = homeData?.titolo      || null; // null = usa JSX originale con span colorato
+  const titolo    = homeData?.titolo    || null;
   const sottotitolo = homeData?.sottotitolo || 'Cucina di stagione, panini gourmet, birre artigianali e un giardino che ti aspetta ogni sera.';
-  const storia      = homeData?.storia      || 'Ogni mattina lo chef inizia dal pane: lievito madre, farine selezionate, 48 ore di pazienza. È la base di tutti i nostri panini e taglieri, e a volte diventa il piatto stesso — come la strazzata lucana con peperoni cruschi.';
-  const citazione   = homeData?.citazione_chef || 'Il pane è poesia che si mangia.';
-  const nomeChef    = homeData?.nome_chef      || 'lo chef';
-  const testoCta    = homeData?.testo_cta      || "Aperti dal giovedì alla domenica (più il lunedì) dalle 18 all'una. Il giardino ti aspetta.";
+  const storia    = homeData?.storia    || 'Ogni mattina lo chef inizia dal pane: lievito madre, farine selezionate, 48 ore di pazienza. È la base di tutti i nostri panini e taglieri, e a volte diventa il piatto stesso — come la strazzata lucana con peperoni cruschi.';
+  const citazione = homeData?.citazione_chef || 'Il pane è poesia che si mangia.';
+  const nomeChef  = homeData?.nome_chef || 'lo chef';
+  const testoCta  = homeData?.testo_cta || "Aperti dal giovedì alla domenica (più il lunedì) dalle 18 all'una. Il giardino ti aspetta.";
 
-  // Foto — da Firebase o fallback agli asset locali
-  const breadImg   = homeData?.foto_pane || bread;
-  const chefImg    = homeData?.foto_chef  || chef;
-  const gardinoImg = homeData?.foto_giardino  || 'https://images.pexels.com/photos/2814828/pexels-photo-2814828.jpeg?auto=compress&cs=tinysrgb&w=1200';
+  const breadImg   = homeData?.foto_pane ? optimizeImg(homeData.foto_pane, 1200) : bread;
+  const gardinoImg = homeData?.foto_giardino ? optimizeImg(homeData.foto_giardino, 1600) : 'https://images.pexels.com/photos/2814828/pexels-photo-2814828.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
   return (
     <>
@@ -126,9 +130,7 @@ export default function Home() {
                   <>Pane fresco,<br /><span className="text-primary italic">tulipani</span> e<br />buona cucina</>
                 )}
               </h1>
-              <p className="text-foreground/70 mt-5 max-w-xl mx-auto text-lg leading-relaxed">
-                {sottotitolo}
-              </p>
+              <p className="text-foreground/70 mt-5 max-w-xl mx-auto text-lg leading-relaxed">{sottotitolo}</p>
               <div className="flex flex-wrap gap-3 justify-center mt-8">
                 <a href={thefork} target="_blank" rel="noopener"
                   className="btn-pill bg-[#E8857A] text-white hover:-translate-y-0.5 transition-transform duration-300 shadow-[0_4px_16px_-4px_#E8857A]">
@@ -159,7 +161,7 @@ export default function Home() {
           <Reveal>
             <div className="relative group">
               <img src={breadImg} alt="Pane artigianale" loading="lazy"
-                className="rounded-[2rem] shadow-[var(--shadow-warm)] w-full transition-transform duration-700 group-hover:scale-[1.02]" />
+                className="rounded-[2rem] shadow-[var(--shadow-warm)] w-full h-72 md:h-96 object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
               <div className="absolute -bottom-6 -left-4 md:-left-8 bg-cream rounded-2xl px-5 py-3 shadow-[var(--shadow-soft)] rotate-[-4deg] group-hover:rotate-[-2deg] transition-transform duration-500">
                 <span className="handwritten text-2xl text-tulip">il pane di oggi</span>
               </div>
@@ -171,13 +173,9 @@ export default function Home() {
               Lievitato lento,<br />mangiato lentamente.
             </h2>
             <p className="text-foreground/75 text-lg leading-relaxed mb-6">{storia}</p>
-            <div className="flex items-center gap-4 mt-8 p-5 bg-card rounded-3xl shadow-[var(--shadow-soft)] hover:-translate-y-1 transition-transform duration-300">
-              <img src={chefImg} alt="Lo chef" loading="lazy"
-                className="w-20 h-20 rounded-full object-cover ring-2 ring-primary/20" />
-              <div>
-                <p className="handwritten text-xl text-primary leading-tight">"{citazione}"</p>
-                <p className="text-sm text-muted-foreground mt-1">— {nomeChef}</p>
-              </div>
+            <div className="mt-8 p-6 bg-card rounded-3xl shadow-[var(--shadow-soft)] hover:-translate-y-1 transition-transform duration-300 border-l-4 border-primary">
+              <p className="handwritten text-2xl text-primary leading-relaxed mb-2">"{citazione}"</p>
+              <p className="text-sm text-muted-foreground">— {nomeChef}</p>
             </div>
           </Reveal>
         </div>

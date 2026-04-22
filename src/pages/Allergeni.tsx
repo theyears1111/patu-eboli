@@ -1,9 +1,12 @@
-
-import { allergens } from "../lib/data";
+import { useFirestore } from "../hooks/useFirestore";
+import { allergens as fallbackAllergens } from "../lib/data";
 import { Reveal } from "../components/Reveal";
 import { Tulip } from "../components/Tulip";
 
 export default function AllergeniPage() {
+  const data = useFirestore('allergeni', { items: [] });
+  const allergens = data?.items?.length ? data.items : fallbackAllergens;
+
   return (
     <div className="px-5 py-16 md:py-24">
       <div className="mx-auto max-w-4xl">
@@ -20,9 +23,9 @@ export default function AllergeniPage() {
         </Reveal>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {allergens.map((a, i) => (
+          {allergens.map((a: any, i: number) => (
             <Reveal key={a.n} delay={(i % 4) * 60}>
-              <div className="bg-card rounded-2xl p-5 shadow-[var(--shadow-soft)] flex gap-4">
+              <div id={`allergene-${a.n}`} className="bg-card rounded-2xl p-5 shadow-[var(--shadow-soft)] flex gap-4 scroll-mt-24">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full bg-accent/15 text-accent font-display font-bold text-xl flex items-center justify-center">
                   {a.n}
                 </div>

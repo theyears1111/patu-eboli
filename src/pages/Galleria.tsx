@@ -4,6 +4,12 @@ import { galleryImages as fallbackImages } from "../lib/data";
 import { Reveal } from "../components/Reveal";
 import { Tulip } from "../components/Tulip";
 
+// Ottimizza URL Cloudinary
+function optimizeImg(url: string, width = 800): string {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  return url.replace('/upload/', `/upload/q_auto,f_webp,w_${width},c_fill/`);
+}
+
 export default function GalleriaPage() {
   const data = useFirestore('galleria', { items: [] });
   const [active, setActive] = useState<string | null>(null);
@@ -34,7 +40,7 @@ export default function GalleriaPage() {
             <Reveal key={img.url || i} delay={(i % 6) * 50}>
               <button onClick={() => setActive(img.url)}
                 style={{ display:'block', width:'100%', marginBottom:16, borderRadius:16, overflow:'hidden', border:'none', padding:0, cursor:'pointer' }}>
-                <img src={img.url} alt={img.titolo || `Patù — ${i + 1}`} loading="lazy"
+                <img src={optimizeImg(img.url, 800)} alt={img.titolo || `Patù — ${i + 1}`} loading="lazy"
                   style={{ width:'100%', height:'auto', display:'block' }} />
               </button>
             </Reveal>

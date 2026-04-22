@@ -1,13 +1,56 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useFirestore } from "../hooks/useFirestore";
 import { menu as fallbackMenu } from "../lib/data";
 import { Reveal } from "../components/Reveal";
 import { Tulip } from "../components/Tulip";
 
+// Nomi allergeni di default (fallback se Firebase non ha la sezione allergeni)
+const ALLERGENI_DEFAULT: Record<number, string> = {
+  1: 'Glutine', 2: 'Crostacei', 3: 'Uova', 4: 'Pesce', 5: 'Arachidi',
+  6: 'Soia', 7: 'Latte', 8: 'Frutta a guscio', 9: 'Sedano',
+  10: 'Senape', 11: 'Sesamo', 12: 'Solfiti', 13: 'Lupini', 14: 'Molluschi',
+};
+
+function AllergeneBadge({ n, nomiMap }: { n: number; nomiMap: Record<number, string> }) {
+  const nome = nomiMap[n] || ALLERGENI_DEFAULT[n] || `Allergene ${n}`;
+  return (
+    <Link
+      to={`/allergeni#allergene-${n}`}
+      title={nome}
+      className="inline-flex items-center gap-1 bg-accent/10 text-accent rounded-full px-2 py-0.5 hover:bg-accent hover:text-white transition-colors cursor-pointer"
+    >
+      <span className="text-[10px] font-bold leading-none">{n}</span>
+      <span className="text-[10px] leading-none hidden sm:inline">{nome}</span>
+    </Link>
+  );
+}
+
+function TagBadge({ tag, colore }: { tag: string; colore?: string }) {
+  const defaultColors: Record<string, string> = {
+    veg: '#7BAF7A', signature: '#E8857A', x2: '#f59e0b', new: '#6366f1',
+  };
+  const defaultLabels: Record<string, string> = {
+    veg: 'veggie', signature: 'del cuore', x2: 'x2', new: 'nuovo',
+  };
+  const bg = colore || defaultColors[tag] || '#7BAF7A';
+  const label = defaultLabels[tag] || tag;
+  return (
+    <span className="absolute -top-2 right-5 handwritten text-base px-3 py-0.5 rounded-full text-white"
+      style={{ backgroundColor: bg }}>
+      {label}
+    </span>
+  );
+}
+
 export default function MenuPage() {
   const data = useFirestore('menu', { items: [] });
+  const allergeniData = useFirestore('allergeni', { items: [] });
 
-  // Costruisce le sezioni da Firebase oppure usa fallback hardcoded
+  // Mappa n -> nome da Firebase (dinamico)
+  const nomiAllergeni: Record<number, string> = {};
+  (allergeniData?.items || []).forEach((a: any) => { nomiAllergeni[a.n] = a.name; });
+
   const sections: { title: string; items: any[] }[] = (() => {
     if (data?.items?.length) {
       const cats: Record<string, any[]> = {};
@@ -62,37 +105,47 @@ export default function MenuPage() {
                 </div>
               </Reveal>
               <div className="grid md:grid-cols-2 gap-5">
-                {section.items.map((item: any, i: number) => (
-                  <Reveal key={item.name} delay={i * 60}>
-                    <div className="bg-card rounded-3xl p-6 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-warm)] transition-all hover:-translate-y-0.5 h-full relative">
-                      {item.tag && (
-                        <span className={`absolute -top-2 right-5 handwritten text-lg px-3 py-0.5 rounded-full ${
-                          item.tag === "veg" ? "bg-primary text-primary-foreground" :
-                          item.tag === "signature" ? "bg-tulip text-primary-foreground" :
-                          "bg-orange text-foreground"
-                        }`}>
-                          {item.tag === "veg" ? "veggie" : item.tag === "signature" ? "del cuore" : item.tag}
-                        </span>
-                      )}
-                      {/* Foto opzionale dall'admin */}
-                      {item.foto && (
-                        <img src={item.foto} alt={item.name} loading="lazy"
-                          className="w-full h-40 object-cover rounded-2xl mb-4" />
-                      )}
-                      <div className="flex justify-between items-start gap-4 mb-2">
-                        <h3 className="font-display text-xl font-semibold">{item.name}</h3>
-                        <span className="font-display text-xl font-bold text-accent whitespace-nowrap">€ {item.price}</span>
+                {section.items.map((item: any, i: number) => {
+                  const allergeni: number[] = item.allergeni || item.allergens || [];
+                  return (
+                    <Reveal key={item.name} delay={i * 60}>
+                      <div className="bg-card rounded-3xl p-6 shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-warm)] transition-all hover:-translate-y-0.5 h-full relative">
+                        {item.tag && <TagBadge tag={item.tag} colore={item.tag_colore} />}
+                        <div className="flex justify-between items-start gap-4 mb-2">
+                          <h3 className="font-display text-xl font-semibold">{item.name}</h3>
+                          <span className="font-display text-xl font-bold text-accent whitespace-nowrap">€ {item.price}</span>
+                        </div>
+                        {(item.desc || item.description) && (
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-3">{item.desc || item.description}</p>
+                        )}
+                        {allergeni.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {allergeni.map((n: number) => (
+                              <AllergeneBadge key={n} n={n} nomiMap={nomiAllergeni} />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {(item.desc || item.description) && (
-                        <p className="text-sm text-muted-foreground leading-relaxed">{item.desc || item.description}</p>
-                      )}
-                    </div>
-                  </Reveal>
-                ))}
+                    </Reveal>
+                  );
+                })}
               </div>
             </section>
           ))}
         </div>
+
+        <Reveal>
+          <div className="mt-12 p-5 bg-card rounded-2xl shadow-[var(--shadow-soft)] flex flex-wrap items-center gap-3">
+            <span className="text-sm text-muted-foreground">Allergeni:</span>
+            {Object.entries(ALLERGENI_DEFAULT).map(([n, nome]) => (
+              <Link key={n} to={`/allergeni#allergene-${n}`}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-accent/20 text-accent text-[9px] font-bold">{n}</span>
+                {nomiAllergeni[Number(n)] || String(nome)}
+              </Link>
+            ))}
+          </div>
+        </Reveal>
       </div>
     </div>
   );
