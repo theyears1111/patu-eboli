@@ -109,7 +109,7 @@ export default function AdminPanel({ user, onLogout }: Props) {
       </div>
 
       <div style={{ display:'flex', flex:1, overflow:'hidden', position:'relative' }}>
-        <div style={{ width:'220px', background:'#fff', borderRight:'1px solid #e5e7eb', display:'flex', flexDirection:'column', flexShrink:0, position: mobileMenu ? 'absolute' : 'relative', top:0, left:0, bottom:0, zIndex:50 }}>
+        <div style={{ width:'220px', background:'#fff', borderRight:'1px solid #e5e7eb', display:'flex', flexDirection:'column', flexShrink:0, position:'fixed', top:0, left: mobileMenu ? '0' : '-220px', bottom:0, zIndex:9999, transition:'left 0.25s ease', overflowY:'auto' }}>
           <div style={{ padding:'12px', borderBottom:'1px solid #f3f4f6' }}>
             <p style={{ color:'#9ca3af', fontSize:'11px', margin:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.email}</p>
           </div>
@@ -126,9 +126,9 @@ export default function AdminPanel({ user, onLogout }: Props) {
           </div>
         </div>
 
-        {mobileMenu && <div onClick={() => setMobileMenu(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.3)', zIndex:40 }} />}
+        {mobileMenu && <div onClick={() => setMobileMenu(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9998 }} />}
 
-        <div style={{ flex:1, overflowY:'auto', padding:'20px 16px' }}>
+        <div style={{ flex:1, overflowY:'auto', padding:'20px 16px', marginLeft:0 }}>
           {loading
             ? <p style={{ color:'#9ca3af', textAlign:'center', marginTop:'60px' }}>Caricamento...</p>
             : <FormEditor sezione={sezione} dati={dati} onChange={setDatiState} />
